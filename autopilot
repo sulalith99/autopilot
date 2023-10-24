@@ -1,0 +1,178 @@
+#!/bin/bash
+
+###things-to-change-start###
+
+xyz_file_name=/homes/sulalith/TEST/5-[Research]/2-[penta-dimers]/Ag91+1_dimer_para_7A.xyz
+number_of_atoms_in_single_nanorod=91
+charge_of_the_molecule=2
+counter=-1
+staring_layer=0
+
+timelimit=03:00:00
+numcores=2
+mem=2G
+
+####things-to-change-end####
+
+#for monomers and dimers
+numatoms=$number_of_atoms_in_single_nanorod
+totalatoms=$(($numatoms*2))
+newtotal=$(($totalatoms-2))
+onerod=$(($newtotal/2))
+totallayers=$(($onerod/6))
+halfpoint=$(($totallayers/2))
+
+#change the coordinate file of interest
+filenameandpath=$xyz_file_name
+
+#change the layers needed to be tested
+for ((layer=$staring_layer; layer<=$halfpoint; layer++))
+do
+((counter++))
+if [ $counter -gt 0 ]
+then
+#create individual directories
+  dname=$counter-layer[$layer]
+  outputname=$layer.xyz
+  mkdir $dname
+  head -n -6 $filenameandpath > $outputname
+  nwd=$PWD
+  filenameandpath=$nwd/$dname/$outputname
+  mv $outputname $dname
+  cd $dname
+
+#Create input file
+filename=layer[$layer]
+filenameinp=$filename.inp
+echo 'Task SinglePoint' >> $filenameinp
+echo 'System' >> $filenameinp
+echo '  ATOMS' >> $filenameinp
+echo '    @include '$filenameandpath >> $filenameinp
+echo '  END' >> $filenameinp
+echo '  CHARGE '$charge_of_the_molecule >> $filenameinp
+echo 'END' >> $filenameinp
+echo 'Engine DFTB' >> $filenameinp
+echo '    ResourcesDir DFTB.org/hyb-0-2' >> $filenameinp
+echo '    Model SCC-DFTB' >> $filenameinp
+echo '    Occupation' >> $filenameinp
+echo '      Strategy Aufbau' >> $filenameinp
+echo '    End' >> $filenameinp
+echo '    Properties' >> $filenameinp
+echo '      Excitations' >> $filenameinp
+echo '        SingleOrbTrans' >> $filenameinp
+echo '             Filter' >> $filenameinp
+echo '                 OSMin 5e-4' >> $filenameinp
+echo '             End' >> $filenameinp
+echo '        End' >> $filenameinp
+echo '        TDDFTB' >> $filenameinp
+echo '            calc singlet' >> $filenameinp
+echo '            lowest 5000' >> $filenameinp
+echo '            DavidsonConfig' >> $filenameinp
+echo '                tolerance 1e-9' >> $filenameinp
+echo '            End' >> $filenameinp
+echo '            print evcontribs' >> $filenameinp
+echo '        End' >> $filenameinp
+echo '     End' >> $filenameinp
+echo '    End' >> $filenameinp
+echo 'EndEngine' >> $filenameinp
+
+else
+#create individual directories
+  dname=$counter-layer[$layer]
+  outputname=$layer.xyz
+  mkdir $dname
+  cp $filenameandpath $outputname
+  nwd=$PWD
+  filenameandpath=$nwd/$dname/$outputname
+  mv $outputname $dname
+  cd $dname
+
+#Create input file
+filename=layer[$layer]
+filenameinp=$filename.inp
+echo 'Task SinglePoint' >> $filenameinp
+echo 'System' >> $filenameinp
+echo '  ATOMS' >> $filenameinp
+echo '    @include '$filenameandpath >> $filenameinp
+echo '  END' >> $filenameinp
+echo '  CHARGE '$charge_of_the_molecule >> $filenameinp
+echo 'END' >> $filenameinp
+echo 'Engine DFTB' >> $filenameinp
+echo '    ResourcesDir DFTB.org/hyb-0-2' >> $filenameinp
+echo '    Model SCC-DFTB' >> $filenameinp
+echo '    Occupation' >> $filenameinp
+echo '      Strategy Aufbau' >> $filenameinp
+echo '    End' >> $filenameinp
+echo '    Properties' >> $filenameinp
+echo '      Excitations' >> $filenameinp
+echo '        SingleOrbTrans' >> $filenameinp
+echo '             Filter' >> $filenameinp
+echo '                 OSMin 5e-4' >> $filenameinp
+echo '             End' >> $filenameinp
+echo '        End' >> $filenameinp
+echo '        TDDFTB' >> $filenameinp
+echo '            calc singlet' >> $filenameinp
+echo '            lowest 5000' >> $filenameinp
+echo '            DavidsonConfig' >> $filenameinp
+echo '                tolerance 1e-9' >> $filenameinp
+echo '            End' >> $filenameinp
+echo '            print evcontribs' >> $filenameinp
+echo '        End' >> $filenameinp
+echo '     End' >> $filenameinp
+echo '    End' >> $filenameinp
+echo 'EndEngine' >> $filenameinp
+fi
+#Start calculation
+  infile=$filename
+  # We are assuming the input file and the script that will be made will be in the current working directory
+  cwd=$PWD
+
+  echo '#!/bin/bash -l' > $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo "#SBATCH --job-name=$infile" >> $cwd/$infile.script
+  echo "#SBATCH --output="$infile"_%j.out" >> $cwd/$infile.script
+  echo "#SBATCH --open-mode=append" >> $cwd/$infile.script
+  echo "#SBATCH --nodes=1" >> $cwd/$infile.script
+  echo "#SBATCH --ntasks-per-node=$numcores" >> $cwd/$infile.script
+  echo "#SBATCH --mem-per-cpu=$mem" >> $cwd/$infile.script
+  echo "#SBATCH --time=$timelimit" >> $cwd/$infile.script
+  echo "#SBATCH --partition=ksu-chem-cmaikens.q,ksu-chem-mri.q,batch.q" >> $cwd/$infile.script
+  echo "##SBATCH --constraint=elves" >> $cwd/$infile.script
+  echo "#SBATCH --no-requeue"  >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo '# Set ADF-specific environment variables' >> $cwd/$infile.script
+  echo 'export NSCM=$SLURM_NTASKS' >> $cwd/$infile.script
+  echo 'export AMSHOME="/homes/cmaikens/ams2021.102"' >> $cwd/$infile.script
+  echo 'export AMSRESOURCES=$AMSHOME/atomicdata' >> $cwd/$infile.script
+  echo 'export AMSBIN=$AMSHOME/bin' >> $cwd/$infile.script
+  echo 'export SCMLICENSE=$AMSHOME/license.txt' >> $cwd/$infile.script
+  echo 'export SCMWISH="/usr/bin/wish"' >> $cwd/$infile.script
+  echo 'export SCM_IOBUFFERSIZE=256' >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo '# Run everything from /tmp to improve speed' >> $cwd/$infile.script
+  echo 'TMPDIR=/tmp' >> $cwd/$infile.script
+  echo 'export SCM_TMPDIR=$TMPDIR' >> $cwd/$infile.script
+  echo 'export MPI_WORKDIR=$TMPDIR' >> $cwd/$infile.script
+  echo 'export SCM_USETMPDIR="yes"' >> $cwd/$infile.script
+  echo 'export SCM_MACHINEFILE=$TMPDIR' >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo '# Set the current directory then run the code from $TMPDIR' >> $cwd/$infile.script
+  echo 'cwd=$PWD' >> $cwd/$infile.script
+  echo 'cd $SCM_TMPDIR' >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo 'echo "Running on host "$HOSTNAME" directory "$TMPDIR" submitted from "$cwd""' >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo "infile=$infile" >> $cwd/$infile.script
+  echo '$AMSBIN/ams -n $SLURM_NTASKS < $cwd/$infile.inp' >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+  echo '# Copy the ams.log file back to the home directory, and call it "$infile".log' >> $cwd/$infile.script
+  echo "cp ams.results/ams.log $cwd/"$infile".log" >> $cwd/$infile.script
+  echo '# Copy the ams.log file back to the home directory, and call it "$infile".log' >> $cwd/$infile.script
+  echo "cp ams.results/ams.log $cwd/"$infile".log" >> $cwd/$infile.script
+  echo '# Copy the tape21 file (now the .rkf file) and/or other results back to the home directory' >> $cwd/$infile.script
+  echo "#cp -r ams.results/adf.rkf $cwd/"$infile".rkf" >> $cwd/$infile.script
+  echo "cp -r ams.results $cwd/"$infile".results" >> $cwd/$infile.script
+  echo '' >> $cwd/$infile.script
+#  sbatch $cwd/$infile.script
+  cd ../
+done
