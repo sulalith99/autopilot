@@ -1,4 +1,4 @@
-# autopilot
+# autopilot # ADF
 # for Ag penta nanorod dimer systems # ADF
 
 * autopilot calculates the excitations for Ag penta nanorod dimer systems using TD-DFTB methods. also, this bash script will remove layer by layer (six Ag atoms for a single layer) in a single nanorod up until half the length of the full nanorod, and create their coordinate files along with the input files.
