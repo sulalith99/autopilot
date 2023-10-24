@@ -7,7 +7,7 @@
 
 * can also do the same type of calculations for the monomers as well; only need to change the path of the monomer coordinates.
 
-* specific locations that needed to be changed are highlighted in the script. Other than that feel free to change as needed.
+* specific locations that needed to be changed are highlighted in the script. other than that feel free to change as needed.
 
 * as the layers are removed one by one, one of the issues that we encountered is the HOMO and LUMO energies become degenerate (similar in energy) and it resulted in un-converged SFC cycles. therefore one of the best methods that can overcome this issue is using level shifting (shifting the LUMO energy by some specified energy). however, level shifting has not yet been implemented in the ADF TD-DFTB method; but it is possible to use it in the TD-DFT method. another solution is to use "Fermi" instead of "Aufbau" as the strategy. even though it will solve the convergence issue, it will not continue to the linear-response (LR) calculations due to fragment occupations. this indicates that the TD-DFTB calculations will limit most of the calculations that we were initially interested in doing (TD-DFT will be the possible solution, but as the size of the system increases, computational cost will also increase rapidly).
 
